@@ -39,7 +39,7 @@ $secondSegment = $parts[1] ?? '';
 
 // Handle API routes
 if ($firstSegment === 'api') {
-    if ($secondSegment === 'shorten.php' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($secondSegment === 'shorten.php') {
         require_once __DIR__ . '/api/shorten.php';
         return true;
     }
@@ -87,7 +87,7 @@ if (!isValidShortCode($firstSegment)) {
 </head>
 <body>
     <h1>Short Link Not Found</h1>
-    <p>The short link <span class="code">' . htmlspecialchars($firstSegment) . '</span> does not exist or is invalid.</p>
+    <p>The short link <span class="code">' . htmlspecialchars($firstSegment, ENT_QUOTES, 'UTF-8') . '</span> does not exist or is invalid.</p>
     <p><a href="/">Create a new short link</a></p>
 </body>
 </html>';
@@ -117,7 +117,29 @@ try {
     return true;
 }
 
-$originalUrl = findOriginalUrl($pdo, $firstSegment);
+try {
+    $originalUrl = findOriginalUrl($pdo, $firstSegment);
+} catch (Throwable $exception) {
+    error_log('URL redirect lookup failed: ' . $exception->getMessage());
+    http_response_code(500);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Error</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 600px; margin: 4rem auto; padding: 0 1rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Internal Server Error</h1>
+    <p>We could not look up this short link. Please try again later.</p>
+</body>
+</html>';
+    return true;
+}
 
 if ($originalUrl === null) {
     http_response_code(404);
@@ -136,7 +158,7 @@ if ($originalUrl === null) {
 </head>
 <body>
     <h1>Short Link Not Found</h1>
-    <p>The short link <span class="code">' . htmlspecialchars($firstSegment) . '</span> does not exist.</p>
+    <p>The short link <span class="code">' . htmlspecialchars($firstSegment, ENT_QUOTES, 'UTF-8') . '</span> does not exist.</p>
     <p><a href="/">Create a new short link</a></p>
 </body>
 </html>';

@@ -12,6 +12,8 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (isLoading) return;
+
     const trimmed = url.trim();
     if (!trimmed) {
       setError('Please enter a URL');
