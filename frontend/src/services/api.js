@@ -14,10 +14,13 @@ async function fetchJson(url, options = {}) {
 
   let data;
   if (isJson) {
-    data = await response.json();
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('Unexpected response from server');
+    }
   } else {
-    const text = await response.text();
-    throw new Error(`Unexpected response (${response.status}): ${text.slice(0, 200)}`);
+    throw new Error(`Unexpected response (${response.status})`);
   }
 
   if (!response.ok) {
