@@ -13,6 +13,7 @@ A web application that converts long URLs into short links.
 - A React frontend with a placeholder URL form
 - A PHP backend health-check endpoint
 - A MySQL schema and PDO connection layer
+- A cryptographically secure short-code generator
 
 URL shortening, redirects, and frontend API calls are not implemented yet.
 
@@ -84,3 +85,13 @@ If you already created an empty database named `url_shortener`, you can also run
 ```bash
 mysql -u root -p url_shortener < backend/database/schema.sql
 ```
+
+## Test short-code generation
+
+From the project root, run the utility as a CLI script (not an HTTP endpoint):
+
+```bash
+php backend/utils/short_code.php
+```
+
+It prints five sample codes. Including the file from PHP does not print anything.
