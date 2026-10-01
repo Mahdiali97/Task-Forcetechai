@@ -14,8 +14,9 @@ A web application that converts long URLs into short links.
 - A PHP backend health-check endpoint
 - A MySQL schema and PDO connection layer
 - A cryptographically secure short-code generator
+- A `POST /api/shorten.php` endpoint that stores a short link
 
-URL shortening, redirects, and frontend API calls are not implemented yet.
+Redirects and frontend API calls are not implemented yet.
 
 ## Run the frontend
 
@@ -61,8 +62,9 @@ Copy `.env.example` to `.env` in the project root and set:
 | `DB_NAME` | Database name (`url_shortener`) |
 | `DB_USER` | MySQL user |
 | `DB_PASSWORD` | MySQL password |
+| `APP_BASE_URL` | Public base used to build short URLs (e.g. `http://localhost:8000`) |
 
-The PDO connection in `backend/config/database.php` reads these values. It is not called by the health endpoint yet.
+The PDO connection in `backend/config/database.php` reads these values.
 
 ### Create the database and tables
 
@@ -95,3 +97,75 @@ php backend/utils/short_code.php
 ```
 
 It prints five sample codes. Including the file from PHP does not print anything.
+
+## Shorten API
+
+Start the PHP built-in server from the project root:
+
+```bash
+php -S localhost:8000 -t backend
+```
+
+### Endpoint
+
+`POST /api/shorten.php`
+
+`Content-Type: application/json`
+
+### Request
+
+```json
+{
+  "url": "https://www.google.com/search?q=force-tech"
+}
+```
+
+### Success (201)
+
+```json
+{
+  "success": true,
+  "short_url": "http://localhost:8000/JXie23"
+}
+```
+
+The path after the base URL is the generated short code. Visiting that path is not implemented yet.
+
+### Validation errors (400)
+
+Returned when the body is not JSON, `url` is missing, empty, not a valid URL, longer than 2048 characters, or not `http`/`https` (for example `ftp://example.com`).
+
+```json
+{
+  "success": false,
+  "error": "Invalid or missing URL."
+}
+```
+
+### Server errors (500)
+
+Unexpected database or runtime failures return a generic message. Database details are not included in the response.
+
+```json
+{
+  "success": false,
+  "error": "Unable to shorten URL."
+}
+```
+
+### Example
+
+```bash
+curl -i -X POST http://localhost:8000/api/shorten.php ^
+  -H "Content-Type: application/json" ^
+  -d "{\"url\":\"https://www.google.com/search?q=force-tech\"}"
+```
+
+On Unix:
+
+```bash
+curl -i -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://www.google.com/search?q=force-tech"}'
+```
+
