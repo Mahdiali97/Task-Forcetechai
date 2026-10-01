@@ -37,7 +37,7 @@ Prerequisites: PHP
 From the project root:
 
 ```bash
-php -S localhost:8000 -t backend
+php -S localhost:8000 -t backend backend/router.php
 ```
 
 Then open:
@@ -100,10 +100,10 @@ It prints five sample codes. Including the file from PHP does not print anything
 
 ## Shorten API
 
-Start the PHP built-in server from the project root:
+Start the PHP built-in server from the project root. Using `router.php` allows local testing of short URL redirects:
 
 ```bash
-php -S localhost:8000 -t backend
+php -S localhost:8000 -t backend backend/router.php
 ```
 
 ### Endpoint
@@ -129,7 +129,13 @@ php -S localhost:8000 -t backend
 }
 ```
 
-The path after the base URL is the generated short code. Visiting that path is not implemented yet.
+The path after the base URL is the generated short code.
+
+### Redirects (302)
+
+Visiting the short code path (e.g. `http://localhost:8000/JXie23`) will return an HTTP 302 redirect to the original URL if found, or an HTTP 404 text response if the short code does not exist. This is handled by `backend/redirect.php`.
+
+For Apache, routing is provided in `backend/.htaccess`. For the PHP dev server, `backend/router.php` routes the request.
 
 ### Validation errors (400)
 
