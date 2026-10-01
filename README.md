@@ -10,13 +10,14 @@ A web application that converts long URLs into short links.
 
 ## Current setup
 
-- A React frontend with a placeholder URL form
+- A React frontend with a functional URL shortening form
 - A PHP backend health-check endpoint
+- A PHP URL shortening API endpoint
+- A PHP redirect handler for short links
 - A MySQL schema and PDO connection layer
 - A cryptographically secure short-code generator
-- A `POST /api/shorten.php` endpoint that stores a short link
 
-Redirects and frontend API calls are not implemented yet.
+All core features are implemented.
 
 ## Run the frontend
 
@@ -30,22 +31,208 @@ npm run dev
 
 Open the local URL printed by Vite (typically `http://localhost:5173`).
 
-## Test the PHP health endpoint
+The frontend dev server proxies `/api` requests to the PHP backend at `http://localhost:8000` via Vite's proxy configuration. Make sure the PHP backend is running (see below) before using the frontend.
+
+### Frontend features
+
+- Controlled form input with React state
+- Loading state during API request
+- Error handling for validation and server errors
+- Success state with clickable shortened URL
+- Copy to clipboard button with visual confirmation
+- Empty input prevention
+- Enter key submits the form
+- Semantic HTML with accessible labels
+- Responsive design (desktop, tablet, mobile)
+
+### Vite proxy configuration
+
+The `vite.config.js` includes a proxy for `/api` routes:
+
+```js
+server: {
+  proxy: {
+    '/api': 'http://localhost:8000',
+  },
+}
+```
+
+This allows the frontend to call `/api/shorten.php` directly without CORS issues during development.
+
+## Test the PHP backend
 
 Prerequisites: PHP
 
 From the project root:
 
 ```bash
-php -S localhost:8000 -t backend backend/router.php
+php -S localhost:8000 backend/redirect.php
 ```
 
-Then open:
+The router script (`backend/redirect.php`) handles all routes:
+- `/` — health check (JSON)
+- `/api/health.php` — health check (JSON)
+- `/api/shorten.php` — create short URL (POST, JSON)
+- `/:shortCode` — redirect to original URL (GET)
 
-- `http://localhost:8000/`
-- `http://localhost:8000/api/health.php`
+Then test:
 
-Both should return JSON with `"status": "ok"`.
+- `http://localhost:8000/` — returns JSON with `"status": "ok"`
+- `http://localhost:8000/api/health.php` — returns JSON with `"status": "ok"`
+
+## URL Shortening API
+
+### Endpoint
+
+```
+POST /api/shorten.php
+```
+
+### Request
+
+Content-Type: `application/json`
+
+```json
+{
+  "url": "https://www.example.com/very/long/url/with/query?param=value"
+}
+```
+
+### Response
+
+#### 201 Created — URL successfully shortened
+
+```json
+{
+  "success": true,
+  "short_url": "http://localhost:8000/JXie23"
+}
+```
+
+#### 400 Bad Request — Invalid or missing URL
+
+```json
+{
+  "success": false,
+  "error": "Missing \"url\" field"
+}
+```
+
+Other 400 errors:
+- `URL cannot be empty`
+- `Invalid URL format`
+- `Only HTTP and HTTPS URLs are allowed`
+
+#### 405 Method Not Allowed
+
+```json
+{
+  "success": false,
+  "error": "Method not allowed"
+}
+```
+
+#### 500 Internal Server Error — Unexpected server/database error
+
+```json
+{
+  "success": false,
+  "error": "Internal server error"
+}
+```
+
+### Validation behavior
+
+| Input | Result |
+|-------|--------|
+| Missing `url` field | 400 |
+| Empty `url` string | 400 |
+| Whitespace-only `url` | 400 |
+| Invalid URL format (e.g. `not-a-url`) | 400 |
+| Non-HTTP scheme (e.g. `ftp://example.com`) | 400 |
+| Valid `http://` or `https://` URL | 201 |
+
+The short code is a 6–8 character random string using `[A-Za-z0-9]`.
+Collisions are handled automatically by retrying up to 10 times.
+The base URL for the short link comes from the `APP_BASE_URL` environment variable (default: `http://localhost:8000`).
+
+### Test with curl
+
+```bash
+# Valid URL
+curl -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.google.com/search?q=force-tech"}'
+
+# Empty URL
+curl -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{"url": ""}'
+
+# Missing URL field
+curl -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Invalid URL
+curl -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{"url": "not-a-url"}'
+
+# Non-HTTP URL
+curl -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{"url": "ftp://example.com/file.txt"}'
+```
+
+## URL Redirect
+
+### Endpoint
+
+```
+GET /:shortCode
+```
+
+Where `:shortCode` is the 6–8 character code returned by the shortening API (e.g., `JXie23`).
+
+### Behavior
+
+| Input | Result |
+|-------|--------|
+| Valid existing short code | 302 Found — redirects to original URL |
+| Valid non-existent short code | 404 Not Found — HTML page |
+| Invalid format (not 6-8 alphanumeric) | 404 Not Found — HTML page |
+
+### Test with curl
+
+```bash
+# Create a short URL first
+curl -X POST http://localhost:8000/api/shorten.php \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.example.com/very/long/path"}'
+
+# Response: {"success":true,"short_url":"http://localhost:8000/Ab3xY9"}
+
+# Test redirect (follows redirect with -L)
+curl -L http://localhost:8000/Ab3xY9
+
+# Test redirect without following (shows 302)
+curl -v http://localhost:8000/Ab3xY9
+
+# Test nonexistent short code
+curl -v http://localhost:8000/nonexistent123
+
+# Test malformed short code (contains hyphen)
+curl -v http://localhost:8000/invalid-code
+```
+
+### Response details
+
+- **Valid short code**: Returns HTTP 302 with `Location` header set to the original URL. Browser will automatically redirect.
+- **Not found**: Returns HTTP 404 with a user-friendly HTML page indicating the short link was not found.
+- **Invalid format**: Returns HTTP 404 with a user-friendly HTML page indicating the short link format is invalid.
+
+The redirect only goes to URLs stored in the database — never to arbitrary user input.
 
 ## Database
 
@@ -62,9 +249,9 @@ Copy `.env.example` to `.env` in the project root and set:
 | `DB_NAME` | Database name (`url_shortener`) |
 | `DB_USER` | MySQL user |
 | `DB_PASSWORD` | MySQL password |
-| `APP_BASE_URL` | Public base used to build short URLs (e.g. `http://localhost:8000`) |
+| `APP_BASE_URL` | Base URL for generated short links (default `http://localhost:8000`) |
 
-The PDO connection in `backend/config/database.php` reads these values.
+The PDO connection in `backend/config/database.php` reads these values. It is not called by the health endpoint yet.
 
 ### Create the database and tables
 
@@ -98,9 +285,11 @@ php backend/utils/short_code.php
 
 It prints five sample codes. Including the file from PHP does not print anything.
 
-## Shorten API
+## Shorten API (Production/Apache)
 
-Start the PHP built-in server from the project root. Using `router.php` allows local testing of short URL redirects:
+For Apache, routing is provided in `backend/.htaccess`. For the PHP dev server, `backend/router.php` routes the request.
+
+Start the PHP built-in server from the project root:
 
 ```bash
 php -S localhost:8000 -t backend backend/router.php
@@ -134,8 +323,6 @@ The path after the base URL is the generated short code.
 ### Redirects (302)
 
 Visiting the short code path (e.g. `http://localhost:8000/JXie23`) will return an HTTP 302 redirect to the original URL if found, or an HTTP 404 text response if the short code does not exist. This is handled by `backend/redirect.php`.
-
-For Apache, routing is provided in `backend/.htaccess`. For the PHP dev server, `backend/router.php` routes the request.
 
 ### Validation errors (400)
 

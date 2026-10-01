@@ -59,6 +59,12 @@ h1 {
   opacity: 0.7;
 }
 
+.shorten-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .shorten-form button {
   margin-top: 8px;
   padding: 12px 16px;
@@ -68,4 +74,126 @@ h1 {
   color: #fff;
   font: inherit;
   font-weight: 600;
+  transition: background-color 0.15s ease;
+}
+
+.shorten-form button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.shorten-form button:active:not(:disabled) {
+  background: #1e40af;
+}
+
+.error-message {
+  margin: 4px 0 4px;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+.result {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.result-label {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.result-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.short-url {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--accent);
+  font: inherit;
+  text-decoration: none;
+  word-break: break-all;
+  transition: border-color 0.15s ease;
+}
+
+.short-url:hover {
+  border-color: var(--accent);
+}
+
+.short-url:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.copy-button {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--heading);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.copy-button:hover:not(:disabled) {
+  background: var(--input-bg);
+  border-color: var(--accent);
+}
+
+.copy-button:active:not(:disabled) {
+  background: #e8edf3;
+}
+
+.copy-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.reset-button {
+  margin-top: 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.reset-button:hover {
+  color: var(--heading);
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 20px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .result-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .copy-button {
+    width: 100%;
+  }
 }
