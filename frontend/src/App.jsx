@@ -7,6 +7,7 @@ function App() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -19,6 +20,8 @@ function App() {
 
     setError(null);
     setShortUrl(null);
+    setCopied(false);
+    setCopyError(false);
     setIsLoading(true);
 
     try {
@@ -37,9 +40,11 @@ function App() {
     try {
       await navigator.clipboard.writeText(shortUrl);
       setCopied(true);
+      setCopyError(false);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch {
+      setCopied(false);
+      setCopyError(true);
     }
   };
 
@@ -48,6 +53,7 @@ function App() {
     setShortUrl(null);
     setError(null);
     setCopied(false);
+    setCopyError(false);
   };
 
   return (
@@ -59,7 +65,7 @@ function App() {
           address below to generate a compact redirect.
         </p>
 
-        <form className="shorten-form" onSubmit={handleSubmit}>
+        <form className="shorten-form" onSubmit={handleSubmit} aria-busy={isLoading}>
           <label htmlFor="url">Long URL</label>
           <input
             id="url"
@@ -87,7 +93,7 @@ function App() {
         </form>
 
         {shortUrl && (
-          <div className="result">
+          <section className="result" aria-live="polite" aria-label="Shortened URL result">
             <p className="result-label">Your shortened URL:</p>
             <div className="result-row">
               <a
@@ -102,15 +108,21 @@ function App() {
                 type="button"
                 className="copy-button"
                 onClick={handleCopy}
-                aria-label={copied ? 'Copied to clipboard' : 'Copy to clipboard'}
+                aria-label="Copy shortened URL"
               >
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             </div>
+            {copied && <p className="copy-message" role="status">Copied to clipboard.</p>}
+            {copyError && (
+              <p className="copy-message copy-message-error" role="alert">
+                Copy failed. Select the URL and copy it manually.
+              </p>
+            )}
             <button type="button" className="reset-button" onClick={handleReset}>
               Create another
             </button>
-          </div>
+          </section>
         )}
       </section>
     </main>

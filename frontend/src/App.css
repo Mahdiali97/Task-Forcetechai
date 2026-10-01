@@ -3,31 +3,32 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: clamp(20px, 5vw, 64px) 20px;
 }
 
 .card {
   width: 100%;
-  max-width: 560px;
+  max-width: 600px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 32px;
+  border-radius: 16px;
+  padding: clamp(28px, 5vw, 48px);
   box-shadow: var(--shadow);
 }
 
 h1 {
-  margin: 0 0 12px;
-  font-size: 2rem;
-  font-weight: 650;
-  letter-spacing: -0.03em;
+  margin: 0 0 10px;
+  font-size: clamp(1.8rem, 4vw, 2.25rem);
+  line-height: 1.15;
+  font-weight: 700;
   color: var(--heading);
 }
 
 .description {
-  margin: 0 0 28px;
+  max-width: 48ch;
+  margin: 0 0 32px;
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .shorten-form {
@@ -44,13 +45,25 @@ h1 {
 
 .shorten-form input {
   width: 100%;
-  box-sizing: border-box;
-  padding: 12px 14px;
+  min-height: 48px;
+  padding: 11px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--input-bg);
   color: var(--heading);
   font: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.shorten-form input::placeholder {
+  color: #8791a1;
+}
+
+.shorten-form input:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline-offset: 0;
+  border-color: var(--accent);
+  background: var(--surface);
 }
 
 .shorten-form input:disabled,
@@ -59,30 +72,34 @@ h1 {
   opacity: 0.7;
 }
 
-.shorten-form input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
 .shorten-form button {
   margin-top: 8px;
-  padding: 12px 16px;
+  min-height: 48px;
+  padding: 12px 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--accent);
   color: #fff;
   font: inherit;
   font-weight: 600;
-  transition: background-color 0.15s ease;
+  cursor: pointer;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .shorten-form button:hover:not(:disabled) {
   background: #1d4ed8;
 }
 
+.shorten-form button:focus-visible,
+.copy-button:focus-visible,
+.reset-button:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.28);
+  outline-offset: 3px;
+}
+
 .shorten-form button:active:not(:disabled) {
   background: #1e40af;
+  transform: translateY(1px);
 }
 
 .error-message {
@@ -92,8 +109,8 @@ h1 {
 }
 
 .result {
-  margin-top: 24px;
-  padding-top: 24px;
+  margin-top: 32px;
+  padding-top: 28px;
   border-top: 1px solid var(--border);
 }
 
@@ -113,38 +130,42 @@ h1 {
 .short-url {
   flex: 1;
   min-width: 0;
-  padding: 12px 14px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--input-bg);
+  border-radius: 10px;
+  background: #eef4ff;
   color: var(--accent);
   font: inherit;
   text-decoration: none;
-  word-break: break-all;
-  transition: border-color 0.15s ease;
+  overflow-wrap: anywhere;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .short-url:hover {
   border-color: var(--accent);
+  background: #e5efff;
 }
 
 .short-url:focus {
-  outline: none;
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline-offset: 0;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .copy-button {
   flex-shrink: 0;
-  padding: 12px 16px;
+  min-height: 48px;
+  padding: 11px 16px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--heading);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .copy-button:hover:not(:disabled) {
@@ -156,6 +177,16 @@ h1 {
   background: #e8edf3;
 }
 
+.copy-message {
+  margin: 10px 0 0;
+  color: #18794e;
+  font-size: 0.875rem;
+}
+
+.copy-message-error {
+  color: #b42318;
+}
+
 .copy-button:disabled {
   opacity: 0.7;
   cursor: default;
@@ -163,9 +194,10 @@ h1 {
 
 .reset-button {
   margin-top: 16px;
-  padding: 10px 16px;
+  min-height: 42px;
+  padding: 9px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--muted);
   font: inherit;
@@ -181,11 +213,7 @@ h1 {
 
 @media (max-width: 480px) {
   .card {
-    padding: 24px 20px;
-  }
-
-  h1 {
-    font-size: 1.75rem;
+    padding: 28px 20px;
   }
 
   .result-row {
@@ -195,5 +223,14 @@ h1 {
 
   .copy-button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
